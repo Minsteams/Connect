@@ -20,7 +20,7 @@ public class BoardMover : MonoBehaviour
 
     private static IEnumerator Moving(Transform board, Vector3 delta, float param)
     {
-        if (delta.sqrMagnitude < 0.01f)
+        if (delta.sqrMagnitude < 0.001f)
         {
             board.Translate(delta);
             yield return 0;

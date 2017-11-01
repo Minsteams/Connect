@@ -51,25 +51,30 @@ public class PlayerController : MonoBehaviour
             animator.SetBool("isGround", true);
             GetComponent<ParticleSystem>().Play();
             ySpeed = 0;
-            //print(1);
         }
         else if(collision.collider.tag == "TouchedGround")
         {
-            isCollisionRouse = true;
+            isCollisionRouse++;
+        }
+        else
+        {
+            print("【Report at time " + Time.time + "】");
+            print("Tag: " + collision.collider.tag);
+            print("ThisTag: " + collision.contacts[0].thisCollider.tag);
+            print("RouseNum: " + isCollisionRouse);
         }
     }
-    private bool isCollisionRouse;//干扰
+    private int isCollisionRouse = 0;//干扰
     private void OnCollisionExit(Collision collision)
     {
-        if (isCollisionRouse)
+        if (isCollisionRouse>0)
         {
             //被不是脚上的碰撞箱干扰！
-            isCollisionRouse = false;
+            isCollisionRouse--;
         }
         else if (collision.collider.tag == "TouchedGround")
         {
             collision.collider.tag = "Ground";
-            //print(0);
             isGround = false;
             animator.SetBool("isGround", false);
             GetComponent<ParticleSystem>().Stop();
@@ -95,17 +100,25 @@ public class PlayerController : MonoBehaviour
         {
             ySpeed -= g * Time.deltaTime;
         }
-        Vector3 dirXY = new Vector3(h * speed, 0, v * speed);
+        Vector3 right = Camera.main.transform.right;//右方单位矢量
+        Vector3 foward = Quaternion.AngleAxis(-90, Vector3.up) * right;//前方单位矢量
+        Vector3 dirXY = right * h * speed + foward * v * speed;//平面速度矢量
         animator.SetFloat("v", dirXY.magnitude);
-        dir = dirXY + Vector3.up * ySpeed;
+        dir = dirXY + Vector3.up * ySpeed;//最终速度矢量
 
         //特殊状态
         if (Buff != null) Buff(this);
 
-        if (dirXY.magnitude > 0.1f)
+        if (dirXY.sqrMagnitude > 0.1f)
         {
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dirXY, Vector3.up), 1 - smoothness);
         }
         GetComponent<Rigidbody>().velocity = dir;
+    }
+    [ContextMenu("Error Report")]
+    void ErrorReport()
+    {
+        print("RouseNum: " + isCollisionRouse);
+        print("ySpeed: " + ySpeed);
     }
 }
